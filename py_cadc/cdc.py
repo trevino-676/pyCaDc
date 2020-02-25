@@ -14,7 +14,7 @@ class CDC:
         password: database user password
         database: database name. default <None>
         port: database port. default <1433>
-        sql_connection: sql server database connection <None>
+        __sql_connection: sql server database connection <None>
         __last_change: code of the last record detected <None>
         __update_data: dictionary for the updated data in the cdc <Dictionary>
     """
@@ -35,7 +35,7 @@ class CDC:
         self.password = password
         self.database = database
         self.port = port
-        self.sql_connection = self.__create_connection_to_mssql()
+        self.__sql_connection = self.__create_connection_to_mssql()
         self.__last_change = None
         self.__update_data = {}
 
@@ -92,7 +92,7 @@ class CDC:
         """
         sep = ", "
         tsql = f"{select_statment}, {sep.join(columns_name)} {from_statment}"
-        changes = self.sql_connection.execute(tsql)
+        changes = self.__sql_connection.execute(tsql)
 
         list_changes = []
         for row in changes:
@@ -120,7 +120,7 @@ class CDC:
         """
         list_name = []
         try:
-            column_names = self.sql_connection.execute(tsql)
+            column_names = self.__sql_connection.execute(tsql)
             if not column_names:
                 return None
             list_name = [field[0] for field in column_names]
@@ -130,6 +130,29 @@ class CDC:
             return None
 
     def __construct_data_response(self, row, operation, columns_name):
+        """
+        this method transfor a data list returned from cdc sql server
+        to dictionary with this structure
+        {
+            'start_lsn': code <byte(10)> from the moment of replication,
+            'operation': code <int> how represent a acction in the database:
+                1: Delete,
+                2: Insert,
+                4: Update,
+            'command': code <int> from the number of action,
+            'data': field <dictionary>from the table with the values.
+                If the action is an update then return 2 dictionaries whith the data
+                before updated and after updated.
+        }
+
+        Parameters:
+            row: data list from the cdc sql server <list>,
+            operation: a code of action in the database <string>,
+            columns_name: a list of the columns name of the table wached <list>
+
+        Returns:
+            <list>: a list of dictionaries of cdc sql server.
+        """
         if operation == "1" or operation == "2":
             change = {
                 "start_lsn": row[0],
@@ -140,11 +163,11 @@ class CDC:
             return change
         elif operation == "3":
             self.__update_data.update(
-                {"prev_data": self.__construct_data_dictionary(row, columns_name)}
+                {"before_data": self.__construct_data_dictionary(row, columns_name)}
             )
         elif operation == "4":
             self.__update_data.update(
-                {"actually_data": self.__construct_data_dictionary(row, columns_name)}
+                {"after_data": self.__construct_data_dictionary(row, columns_name)}
             )
             change = {
                 "start_lsn": row[0],
