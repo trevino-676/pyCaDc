@@ -35,7 +35,10 @@ class CDC:
         self.password = password
         self.database = database
         self.port = port
-        self.__sql_connection = self.__create_connection_to_mssql()
+        try:
+            self.__sql_connection = self.__create_connection_to_mssql()
+        except pyodbc.Error as error:
+            raise error
         self.__last_change = None
         self.__update_data = {}
 
@@ -64,7 +67,7 @@ class CDC:
             mssql_connector = pyodbc.connect(connection_string)
         except pyodbc.Error as pyodbcerror:
             mssql_connector = None
-            print(pyodbcerror)
+            raise pyodbcerror
         finally:
             return mssql_connector
 
@@ -197,3 +200,11 @@ class CDC:
             count = count + 1
 
         return data
+
+    def check_odbc_connection(self):
+        """
+        Check the connection of odbc connection
+        """
+        if self.__sql_connection is not None:
+            return True
+        return False
