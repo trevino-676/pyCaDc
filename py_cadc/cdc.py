@@ -83,13 +83,13 @@ class CDC:
         """
         from_table = f"cdc.dbo_{table_name}_CT"
         select_statment = """SELECT
-                CONVERT (int, __$start_lsn) as start_lsn,
+                __$start_lsn,
                 __$operation,
                 __$command_id"""
         columns_name = self.__get_columns_name(table_name)
         from_statment = f"""
             FROM {from_table}
-            WHERE CONVERT (int, __$start_lsn) >
+            WHERE __$start_lsn >
                 {self.__last_change if self.__last_change is not None else 0}
             ORDER BY {from_table}.[__$start_lsn] ASC
         """
@@ -99,6 +99,7 @@ class CDC:
 
         list_changes = []
         for row in changes:
+            self.__last_change = row[0]
             change = self.__construct_data_response(row, str(row[1]), columns_name)
             if change is not None:
                 list_changes.append(change)
