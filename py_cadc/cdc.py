@@ -39,7 +39,7 @@ class CDC:
             self.__sql_connection = self.__create_connection_to_mssql()
         except pyodbc.Error as error:
             raise error
-        self.__last_change = None
+        self.__last_change = ''
         self.__update_data = {}
 
     def __create_connection_to_mssql(self):
@@ -89,17 +89,17 @@ class CDC:
         columns_name = self.__get_columns_name(table_name)
         from_statment = f"""
             FROM {from_table}
-            WHERE __$start_lsn >
-                {self.__last_change if self.__last_change is not None else 0}
+            WHERE __$start_lsn > CONVERT(binary, '{self.__last_change}')
             ORDER BY {from_table}.[__$start_lsn] ASC
         """
         sep = ", "
         tsql = f"{select_statment}, {sep.join(columns_name)} {from_statment}"
+        print(self.__last_change)
         changes = self.__sql_connection.execute(tsql)
 
         list_changes = []
         for row in changes:
-            self.__last_change = row[0]
+            self.__last_change = "".join(chr(x) for x in bytearray(row[0]))
             change = self.__construct_data_response(row, str(row[1]), columns_name)
             if change is not None:
                 list_changes.append(change)
