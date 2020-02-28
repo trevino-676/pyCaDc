@@ -94,7 +94,6 @@ class CDC:
         """
         sep = ", "
         tsql = f"{select_statment}, {sep.join(columns_name)} {from_statment}"
-        print(self.__last_change)
         changes = self.__sql_connection.execute(tsql)
 
         list_changes = []
