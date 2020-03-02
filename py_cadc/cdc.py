@@ -103,6 +103,9 @@ class CDC:
             if change is not None:
                 list_changes.append(change)
 
+        if len(list_changes) == 0:
+            return None
+
         return list_changes
 
     def __get_columns_name(self, table_name):
