@@ -1,6 +1,7 @@
 import threading
 import time
-from cdc import CDC
+
+from .cdc import CDC
 
 
 class WatchCDC(threading.Thread):
