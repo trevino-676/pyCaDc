@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pyodbc
 
 
@@ -101,6 +103,7 @@ class CDC:
             self.__last_change = "".join(chr(x) for x in bytearray(row[0]))
             change = self.__construct_data_response(row, str(row[1]), columns_name)
             if change is not None:
+                list_changes.update({"table_name": table_name})
                 list_changes.append(change)
 
         if len(list_changes) == 0:
@@ -161,6 +164,7 @@ class CDC:
         """
         if operation == "1" or operation == "2":
             change = {
+                "datetime": datetime.now(),
                 "start_lsn": row[0],
                 "operation": row[1],
                 "command": row[2],
@@ -176,6 +180,7 @@ class CDC:
                 {"after_data": self.__construct_data_dictionary(row, columns_name)}
             )
             change = {
+                "datetime": datetime.now(),
                 "start_lsn": row[0],
                 "operation": row[1],
                 "command": row[2],
