@@ -54,4 +54,3 @@ class ProducerMQ:
             self.channel.close()
             self.__connection.close()
             return band
-
