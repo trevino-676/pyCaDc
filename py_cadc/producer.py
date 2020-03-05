@@ -19,10 +19,36 @@ class ProducerMQ():
         """
         try:
             self.__connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host=host, port=port)
+                pika.ConnectionParameters(host, port)
             )
-            self.__channel = self.__connection.channel()
+            self.channel = self.__connection.channel()
         except Exception as err:
-            print(err.with_traceback())
+            print(err)
             self.__connection = None
-            self.__channel = None
+            self.channel = None
+  
+    def send_message(self, message, routing_key, queue="test"):
+        """
+        This method send a message to queue from rabbitMQ server declared in the object
+
+        :param message:  message body
+        :param routing_key: The routing key to bind on
+        :param queue: name of queue in rabbitmq server
+        :type message: string
+        :type routing_key: string
+        :type queue: string
+        :return: True if the message was sent correctly else False
+        :rtype: boolean
+        """
+        band = False
+        try:
+            self.channel.queue_declare(queue=queue, durable=True)
+            self.channel.basic_publish(
+                exchange="", routing_key=routing_key, body=message
+            )
+            band = True
+        except Exception as err:
+            print(err)
+        finally:
+            self.channel.close()
+            return band
