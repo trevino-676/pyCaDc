@@ -51,4 +51,5 @@ class ProducerMQ():
             print(err)
         finally:
             self.channel.close()
+            self.__connection.close()
             return band
