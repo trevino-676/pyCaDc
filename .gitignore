@@ -130,3 +130,7 @@ dmypy.json
 
 # vscode
 .vscode/
+
+docker-compose.yaml
+main.py
+my.cnf
