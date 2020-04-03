@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pyodbc
 
 
@@ -32,14 +34,14 @@ class CDC:
         """
         self.host = host
         self.user = user
-        self.password = password
+        self.__password = password
         self.database = database
         self.port = port
         try:
             self.__sql_connection = self.__create_connection_to_mssql()
         except pyodbc.Error as error:
             raise error
-        self.__last_change = ''
+        self.__last_change = ""
         self.__update_data = {}
 
     def __create_connection_to_mssql(self):
@@ -59,7 +61,7 @@ class CDC:
             + ";UID="
             + self.user
             + ";PWD="
-            + self.password
+            + self.__password
             + ";"
         )
         mssql_connector = None
@@ -99,8 +101,11 @@ class CDC:
         list_changes = []
         for row in changes:
             self.__last_change = "".join(chr(x) for x in bytearray(row[0]))
-            change = self.__construct_data_response(row, str(row[1]), columns_name)
+            change = self.__construct_data_response(
+                row, str(row[1]), columns_name, from_table
+            )
             if change is not None:
+                list_changes.update({"table_name": table_name})
                 list_changes.append(change)
 
         if len(list_changes) == 0:
@@ -135,9 +140,9 @@ class CDC:
             print(error)
             return None
 
-    def __construct_data_response(self, row, operation, columns_name):
+    def __construct_data_response(self, row, operation, columns_name, table_name):
         """
-        this method transfor a data list returned from cdc sql server
+        this method transform a data list returned from cdc sql server
         to dictionary with this structure
         {
             'start_lsn': code <byte(10)> from the moment of replication,
@@ -161,6 +166,8 @@ class CDC:
         """
         if operation == "1" or operation == "2":
             change = {
+                "table": table_name,
+                "datetime": datetime.now(),
                 "start_lsn": row[0],
                 "operation": row[1],
                 "command": row[2],
@@ -176,6 +183,8 @@ class CDC:
                 {"after_data": self.__construct_data_dictionary(row, columns_name)}
             )
             change = {
+                "table": table_name,
+                "datetime": datetime.now(),
                 "start_lsn": row[0],
                 "operation": row[1],
                 "command": row[2],
