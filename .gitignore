@@ -134,3 +134,8 @@ dmypy.json
 docker-compose.yaml
 main.py
 my.cnf
+src/
+.idea/
+.vscode/
+.pytest_cache/
+.github/

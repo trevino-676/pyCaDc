@@ -73,7 +73,7 @@ class CDC:
         finally:
             return mssql_connector
 
-    def get_changes_from_cdc(self, table_name):
+    def get_changes_from_cdc(self, schema, table_name):
         """
         this methos return a lis of dictionary from changes in the cdc
 
@@ -83,11 +83,10 @@ class CDC:
         Returns:
             list_changes: <list>
         """
-        from_table = f"cdc.dbo_{table_name}_CT"
+        from_table = f"cdc.{schema}_{table_name}_CT"
         select_statment = """SELECT
                 __$start_lsn,
-                __$operation,
-                __$command_id"""
+                __$operation"""
         columns_name = self.__get_columns_name(table_name)
         from_statment = f"""
             FROM {from_table}
@@ -105,7 +104,6 @@ class CDC:
                 row, str(row[1]), columns_name, from_table
             )
             if change is not None:
-                list_changes.update({"table_name": table_name})
                 list_changes.append(change)
 
         if len(list_changes) == 0:
@@ -167,8 +165,8 @@ class CDC:
         if operation == "1" or operation == "2":
             change = {
                 "table": table_name,
-                "datetime": datetime.now(),
-                "start_lsn": row[0],
+                "datetime": datetime.now().strftime("%Y-%m-%d, %H,%M,%S"),
+                "start_lsn": str(row[0]),
                 "operation": row[1],
                 "command": row[2],
                 "data": self.__construct_data_dictionary(row, columns_name),
@@ -184,8 +182,8 @@ class CDC:
             )
             change = {
                 "table": table_name,
-                "datetime": datetime.now(),
-                "start_lsn": row[0],
+                "datetime": datetime.now().strftime("%Y-%m-%d, %H,%M,%S"),
+                "start_lsn": str(row[0]),
                 "operation": row[1],
                 "command": row[2],
                 "data": self.__update_data,
@@ -206,7 +204,7 @@ class CDC:
             dictionary
         """
         data = {}
-        count = 3
+        count = 2
         for column in column_name:
             data.update({column: str(row[count]).strip()})
             count = count + 1
