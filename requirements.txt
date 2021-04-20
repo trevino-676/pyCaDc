@@ -13,7 +13,7 @@ pika==1.1.0
 pluggy==0.13.1
 post==2019.4.13
 public==2019.4.13
-py==1.8.1
+py==1.10.0
 PyMySQL==0.9.3
 pyodbc==4.0.30
 pyparsing==2.4.6
