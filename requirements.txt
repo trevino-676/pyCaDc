@@ -3,7 +3,7 @@ certifi==2022.12.7
 chardet==3.0.4
 docutils==0.16
 get==2019.4.13
-idna==2.9
+idna==3.7
 importlib-metadata==1.5.0
 lockfile==0.12.2
 more-itertools==8.2.0
